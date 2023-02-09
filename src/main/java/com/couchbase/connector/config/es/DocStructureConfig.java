@@ -32,13 +32,25 @@ public interface DocStructureConfig {
 
   boolean wrapCounters();
 
+  @Nullable
+  String filterFields();
+
+  @Nullable
+  String denormalizeFields();
+
+  @Nullable
+  String excludeFields();
+
   static ImmutableDocStructureConfig from(ConfigTable config) {
-    config.expectOnly("metadataFieldName", "documentContentAtTopLevel", "wrapCounters");
+    config.expectOnly("metadataFieldName", "documentContentAtTopLevel", "wrapCounters", "filterFields", "denormalizeFields", "excludeFields");
 
     return ImmutableDocStructureConfig.builder()
         .metadataFieldName(Strings.emptyToNull(config.getString("metadataFieldName").orElse(null)))
         .documentContentAtTopLevel(config.getBoolean("documentContentAtTopLevel").orElse(false))
         .wrapCounters(config.getBoolean("wrapCounters").orElse(false))
+        .filterFields(Strings.emptyToNull(config.getString("filterFields").orElse(null)))
+        .denormalizeFields(Strings.emptyToNull(config.getString("denormalizeFields").orElse(null)))
+        .excludeFields(Strings.emptyToNull(config.getString("excludeFields").orElse(null)))
         .build();
   }
 }

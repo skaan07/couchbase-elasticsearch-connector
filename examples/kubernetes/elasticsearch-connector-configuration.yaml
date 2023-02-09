@@ -198,6 +198,21 @@ data:
       # false means ignore Couchbase counter documents.
       # true means replicate them as Object nodes like {"value":<counter>}
       wrapCounters = false
+    
+      # List of field names from first level of document to filter and add to elastic document
+      # Leave empty or do not set to index all fields in elastic search
+      # Example : filterFields = 'filed1,field2,field3'
+      filterFields = ''
+    
+      # Confugration for fields to denormalize and move to the top node of document
+      # Leave empty or do not set to not denormalize
+      # Example : denormalizeFields = 'lines.barcode:barcodes'
+      denormalizeFields = ''
+    
+      # Confugration for fields to exclude and remove to the top node of document
+      # Leave empty or do not set to not exclude
+      # Example : excludeFields = 'lines.barcode'
+      excludeFields = ''
 
     # The values in this section may be overridden by specific type definitions.
     [elasticsearch.typeDefaults]

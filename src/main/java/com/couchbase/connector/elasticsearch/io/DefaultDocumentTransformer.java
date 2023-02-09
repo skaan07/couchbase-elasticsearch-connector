@@ -20,6 +20,9 @@ import com.couchbase.client.dcp.core.utils.DefaultObjectMapper;
 import com.couchbase.client.dcp.highlevel.Mutation;
 import com.couchbase.connector.config.es.DocStructureConfig;
 import com.couchbase.connector.dcp.Event;
+import com.couchbase.connector.elasticsearch.io.transformerchain.TransformerChain;
+import com.couchbase.connector.elasticsearch.io.transformerchain.TransformerChainFactory;
+import com.couchbase.connector.elasticsearch.io.transformerchain.TransformerConfig;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -43,10 +46,19 @@ public class DefaultDocumentTransformer implements DocumentTransformer {
   private final String metadataFieldName;
   private final boolean wrapCounters;
 
+  private final TransformerChain transformerChain;
+
   public DefaultDocumentTransformer(DocStructureConfig docStructureConfig) {
     this.documentContentAtTopLevel = docStructureConfig.documentContentAtTopLevel();
     this.metadataFieldName = docStructureConfig.metadataFieldName();
     this.wrapCounters = docStructureConfig.wrapCounters();
+    this.transformerChain = TransformerChainFactory.getTransformerChain(
+        TransformerConfig.builder()
+            .filterFields(docStructureConfig.filterFields())
+            .denormalizeFields(docStructureConfig.denormalizeFields())
+            .excludeFields(docStructureConfig.excludeFields())
+            .build()
+    );
   }
 
   private static boolean isSingleValidJsonObject(byte[] json) {
@@ -102,12 +114,14 @@ public class DefaultDocumentTransformer implements DocumentTransformer {
       return null;
     }
 
+    Map<String, Object> transformedDocument = transformerChain.transform(couchbaseDocument);
+
     final Map<String, Object> esDocument;
     if (documentContentAtTopLevel) {
-      esDocument = couchbaseDocument;
+      esDocument = transformedDocument;
     } else {
       esDocument = new HashMap<>();
-      esDocument.put("doc", couchbaseDocument);
+      esDocument.put("doc", transformedDocument);
     }
 
     if (metadataFieldName != null) {
